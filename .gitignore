@@ -1,0 +1,11 @@
+# Local Python environments and caches
+/.venv/
+/.conda/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Downloaded data and generated analysis outputs
+/data/raw/
+/outputs/
