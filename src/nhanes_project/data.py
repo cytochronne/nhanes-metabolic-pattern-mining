@@ -2,6 +2,7 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha256
+from http.client import HTTPException
 from io import BytesIO
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -86,7 +87,7 @@ def load_component(component, raw_dir, base_url):
                     raw = response.read()
                 frame = read_xpt(raw, component)
                 break
-            except (ValueError, TypeError, OSError, EOFError) as error:
+            except (ValueError, TypeError, OSError, EOFError, HTTPException) as error:
                 if attempt == 2:
                     raise RuntimeError(f"Could not obtain valid data from {url}: {error}") from error
         atomic_write(path, raw)

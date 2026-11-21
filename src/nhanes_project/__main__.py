@@ -16,6 +16,20 @@ def execute(config_path, command, check_with_r=False):
     with config_path.open("rb") as source:
         config = tomllib.load(source)
     output = Path(config["data"]["output_dir"])
+    output.mkdir(parents=True, exist_ok=True)
+    lock = output / ".running"
+    try:
+        marker = lock.open("x")
+    except FileExistsError as error:
+        raise RuntimeError(f"Output directory is locked by another run: {output}") from error
+    try:
+        with marker:
+            execute_locked(config, output, command, check_with_r)
+    finally:
+        lock.unlink()
+
+
+def execute_locked(config, output, command, check_with_r):
     tables = output / "tables"
     manifest_path = output / "run_manifest.json"
     manifest = {
@@ -71,6 +85,10 @@ def execute(config_path, command, check_with_r=False):
         manifest["stages"][stage] = "failed"
         manifest["error"] = str(error)
         raise
+    except KeyboardInterrupt:
+        manifest["status"] = "interrupted"
+        manifest["stages"][stage] = "interrupted"
+        raise
     finally:
         manifest["finished_at"] = datetime.now(UTC).isoformat()
         save_manifest()
@@ -89,6 +107,8 @@ def main():
     except (OSError, RuntimeError, ValueError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
+    except KeyboardInterrupt:
+        return 130
     return 0
 
 

@@ -35,6 +35,11 @@ repeats = 10
 [validation]
 minimum_events_and_nonevents = 10
 
+[survey]
+minimum_domain_n = 30
+minimum_effective_n = 30
+minimum_domain_df = 8
+
 [robustness]
 subsample_fraction = 0.80
 repeats = 100
