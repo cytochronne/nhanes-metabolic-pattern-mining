@@ -9,3 +9,4 @@ __pycache__/
 # Downloaded data and generated analysis outputs
 /data/raw/
 /outputs/
+/output/

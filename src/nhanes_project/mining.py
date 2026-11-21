@@ -259,7 +259,9 @@ def mine_discovery(discovery, config, tables, manifest):
         for threshold, counts in verified.items()
         for items, count in sorted(counts.items(), key=lambda pair: (len(pair[0]), -pair[1], pair[0]))
     ]
-    write_table(tables, "frequent_itemsets", pd.DataFrame(itemsets))
+    write_table(tables, "frequent_itemsets", pd.DataFrame(
+        itemsets, columns=["itemset", "size", "count", "n", "support", "min_support", "minimum_count"],
+    ))
     write_table(tables, "association_rules", pd.DataFrame(main_rules, columns=RULE_COLUMNS))
     grid, rankings = [], []
     for s in settings["support_grid"]:

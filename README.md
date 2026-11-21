@@ -37,3 +37,13 @@ python -m nhanes_project run --config config/analysis.toml --check-with-r
 留出集的未加权模型使用基于 30 个掩码 PSU 的聚类稳健区间，Holm 校正以锁定候选为一组。全周期的加权表基于成年完整案例分析域，在线性化方差中保留全部正权重记录。区间使用 logit 变换与域内自由度，小样本、低有效样本量和低设计自由度按配置标记。权重按两年 MEC 权重使用。详细分母见 `heldout_health_validation.csv`、`weighted_candidate_estimates.csv` 与 `r_survey_crosscheck.csv`。[CDC NHANES 权重指南](https://wwwn.cdc.gov/nchs/nhanes/tutorials/weighting.aspx) · [CDC NHANES 方差估计](https://wwwn.cdc.gov/nchs/nhanes/tutorials/varianceestimation.aspx)
 
 稳健性结果记录于 `subsample_stability.csv`、`subgroup_prevalence.csv` 和 `complete_case_sensitivity.csv`。四类图同时输出 PDF 和 PNG 至 `outputs/figures/`，图注标出分析集、分母和加权口径。一次运行独占配置中的输出目录。若进程被强制终止，确认该目录已无运行进程后可删除遗留的 `.running` 标记。
+
+## 课程交付
+
+用默认配置完成 `run --check-with-r` 后，从同一次运行的表图生成英文海报和报告。
+
+```bash
+python -m nhanes_project.materials
+```
+
+默认写入 `output/pdf/Poster.pdf`（A1 横版）和 `output/pdf/Report.pdf`（A4，8 页）。[讲稿与答辩要点](doc/poster-talk.md)适用于约四分钟的海报展示。交付 ZIP 包含两份 PDF、讲稿、运行清单、汇总表图和可复跑的源代码。原始 XPT 由运行入口下载，参与者级划分表可由工作流在本地生成。复核时对照输入 SHA-256、样本数、候选哈希和数值表，计时数据随环境波动。
