@@ -1,0 +1,31 @@
+rank,itemset,antecedent,consequent,age_group,sex_code,n,antecedent_n,consequent_n,joint_n,expected_joint_n
+1,central_obesity + elevated_hba1c,central_obesity,elevated_hba1c,20-39,1.0,221,83,43,23,16.149321266968325
+1,central_obesity + elevated_hba1c,central_obesity,elevated_hba1c,20-39,2.0,209,123,28,27,16.47846889952153
+1,central_obesity + elevated_hba1c,central_obesity,elevated_hba1c,40-59,1.0,183,93,97,56,49.295081967213115
+1,central_obesity + elevated_hba1c,central_obesity,elevated_hba1c,40-59,2.0,219,155,91,74,64.40639269406392
+1,central_obesity + elevated_hba1c,central_obesity,elevated_hba1c,60+,1.0,274,159,184,116,106.77372262773723
+1,central_obesity + elevated_hba1c,central_obesity,elevated_hba1c,60+,2.0,249,203,168,142,136.96385542168676
+2,elevated_bp + elevated_hba1c,elevated_bp,elevated_hba1c,20-39,1.0,221,59,43,15,11.479638009049774
+2,elevated_bp + elevated_hba1c,elevated_bp,elevated_hba1c,20-39,2.0,209,23,28,6,3.0813397129186604
+2,elevated_bp + elevated_hba1c,elevated_bp,elevated_hba1c,40-59,1.0,183,77,97,47,40.814207650273225
+2,elevated_bp + elevated_hba1c,elevated_bp,elevated_hba1c,40-59,2.0,219,79,91,36,32.82648401826484
+2,elevated_bp + elevated_hba1c,elevated_bp,elevated_hba1c,60+,1.0,274,161,184,113,108.11678832116789
+2,elevated_bp + elevated_hba1c,elevated_bp,elevated_hba1c,60+,2.0,249,144,168,103,97.1566265060241
+3,central_obesity + low_hdl,low_hdl,central_obesity,20-39,1.0,221,49,83,26,18.402714932126695
+3,central_obesity + low_hdl,low_hdl,central_obesity,20-39,2.0,209,76,123,66,44.72727272727273
+3,central_obesity + low_hdl,low_hdl,central_obesity,40-59,1.0,183,57,93,38,28.9672131147541
+3,central_obesity + low_hdl,low_hdl,central_obesity,40-59,2.0,219,79,155,68,55.91324200913242
+3,central_obesity + low_hdl,low_hdl,central_obesity,60+,1.0,274,58,159,38,33.65693430656934
+3,central_obesity + low_hdl,low_hdl,central_obesity,60+,2.0,249,77,203,68,62.77510040160642
+4,central_obesity + elevated_bp + elevated_hba1c,central_obesity + elevated_bp,elevated_hba1c,20-39,1.0,221,37,43,11,7.199095022624435
+4,central_obesity + elevated_bp + elevated_hba1c,central_obesity + elevated_bp,elevated_hba1c,20-39,2.0,209,20,28,6,2.6794258373205744
+4,central_obesity + elevated_bp + elevated_hba1c,central_obesity + elevated_bp,elevated_hba1c,40-59,1.0,183,50,97,33,26.502732240437158
+4,central_obesity + elevated_bp + elevated_hba1c,central_obesity + elevated_bp,elevated_hba1c,40-59,2.0,219,66,91,33,27.424657534246574
+4,central_obesity + elevated_bp + elevated_hba1c,central_obesity + elevated_bp,elevated_hba1c,60+,1.0,274,91,184,70,61.10948905109489
+4,central_obesity + elevated_bp + elevated_hba1c,central_obesity + elevated_bp,elevated_hba1c,60+,2.0,249,120,168,85,80.96385542168674
+5,central_obesity + elevated_hba1c + low_hdl,elevated_hba1c + low_hdl,central_obesity,20-39,1.0,221,10,83,4,3.755656108597285
+5,central_obesity + elevated_hba1c + low_hdl,elevated_hba1c + low_hdl,central_obesity,20-39,2.0,209,20,123,20,11.770334928229666
+5,central_obesity + elevated_hba1c + low_hdl,elevated_hba1c + low_hdl,central_obesity,40-59,1.0,183,33,93,24,16.770491803278688
+5,central_obesity + elevated_hba1c + low_hdl,elevated_hba1c + low_hdl,central_obesity,40-59,2.0,219,44,155,38,31.141552511415526
+5,central_obesity + elevated_hba1c + low_hdl,elevated_hba1c + low_hdl,central_obesity,60+,1.0,274,42,159,27,24.37226277372263
+5,central_obesity + elevated_hba1c + low_hdl,elevated_hba1c + low_hdl,central_obesity,60+,2.0,249,63,203,57,51.36144578313253

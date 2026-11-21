@@ -1,0 +1,11 @@
+rank,split,itemset,antecedent,consequent,antecedent_n,consequent_n,joint_n,n,support,confidence,lift,leverage,passes_thresholds
+1,discovery,central_obesity + elevated_hba1c,central_obesity,elevated_hba1c,1910,1432,1026,3159,0.3247863247863248,0.53717277486911,1.1850061423264793,0.050706458711804986,True
+1,validation,central_obesity + elevated_hba1c,central_obesity,elevated_hba1c,816,611,438,1355,0.32324723247232473,0.5367647058823529,1.190370174256282,0.051695374518320826,True
+2,discovery,elevated_bp + elevated_hba1c,elevated_bp,elevated_hba1c,1258,1432,729,3159,0.23076923076923078,0.5794912559618441,1.2783609480331466,0.05024961217145804,True
+2,validation,elevated_bp + elevated_hba1c,elevated_bp,elevated_hba1c,543,611,320,1355,0.23616236162361623,0.5893186003683242,1.3069176816678874,0.055460573793929824,True
+3,discovery,central_obesity + low_hdl,low_hdl,central_obesity,942,1910,719,3159,0.2276036720481165,0.7632696390658175,1.2623920365491712,0.04730811768903992,True
+3,validation,central_obesity + low_hdl,low_hdl,central_obesity,396,816,304,1355,0.2243542435424354,0.7676767676767676,1.2747573776985541,0.048356640023964816,True
+4,discovery,central_obesity + elevated_bp + elevated_hba1c,central_obesity + elevated_bp,elevated_hba1c,836,1432,523,3159,0.16555872111427666,0.6255980861244019,1.3800728729518057,0.04559496821464392,True
+4,validation,central_obesity + elevated_bp + elevated_hba1c,central_obesity + elevated_bp,elevated_hba1c,384,611,238,1355,0.17564575645756458,0.6197916666666666,1.3744970676486634,0.047856646832150976,True
+5,discovery,central_obesity + elevated_hba1c + low_hdl,elevated_hba1c + low_hdl,central_obesity,496,1910,426,3159,0.13485280151946819,0.8588709677419355,1.420509626752238,0.039920110476897086,True
+5,validation,central_obesity + elevated_hba1c + low_hdl,elevated_hba1c + low_hdl,central_obesity,212,816,170,1355,0.12546125461254612,0.8018867924528302,1.331564465408805,0.03124031535518307,True

@@ -152,6 +152,17 @@ def verified_itemsets(transactions, min_count, max_size, direct):
     return expected
 
 
+def rule_metrics(n, left, right, joint):
+    """Unweighted metrics for fixed antecedent and consequent counts."""
+    return {
+        "n": n, "antecedent_n": left, "consequent_n": right, "joint_n": joint,
+        "support": joint / n if n else np.nan,
+        "confidence": joint / left if left else np.nan,
+        "lift": joint * n / (left * right) if left and right else np.nan,
+        "leverage": (joint * n - left * right) / (n * n) if n else np.nan,
+    }
+
+
 def association_rules(counts, n, min_confidence):
     required = Fraction(str(min_confidence))
     if not 0 <= required <= 1:
@@ -165,10 +176,7 @@ def association_rules(counts, n, min_confidence):
                 if joint * required.denominator >= left * required.numerator:
                     rows.append({
                         "itemset": itemset_name(itemset), "antecedent": itemset_name(antecedent),
-                        "consequent": itemset_name(consequent), "antecedent_n": left,
-                        "consequent_n": right, "joint_n": joint, "n": n, "support": joint / n,
-                        "confidence": joint / left, "lift": joint * n / (left * right),
-                        "leverage": (joint * n - left * right) / (n * n),
+                        "consequent": itemset_name(consequent), **rule_metrics(n, left, right, joint),
                     })
     return rows
 

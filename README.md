@@ -38,6 +38,18 @@ python -m nhanes_project run --config config/analysis.toml --check-with-r
 
 稳健性结果记录于 `subsample_stability.csv`、`subgroup_prevalence.csv` 和 `complete_case_sensitivity.csv`。四类图同时输出 PDF 和 PNG 至 `outputs/figures/`，图注标出分析集、分母和加权口径。一次运行独占配置中的输出目录。若进程被强制终止，确认该目录已无运行进程后可删除遗留的 `.running` 标记。
 
+### 锁定规则的验证与比较
+
+`run` 在 `outputs/tables/` 导出以下未加权描述性结果。规则方向及候选名单取自发现集。默认配置下发现集有 3,159 人，留出集有 1,355 人。两组均保留空事务和缺少自评健康回答的完整测量记录。
+
+| 结果表 | 分析口径 |
+|---|---|
+| `rule_replication.csv` | 每条锁定规则在发现集和留出集各占一行，给出前件、后件和联合人数、支持度、置信度、lift、leverage，以及是否同时达到原定支持度与置信度阈值。低于阈值的规则仍保留。 |
+| `heldout_stratified_rules.csv`、`heldout_rule_strata.csv` | 在留出集按 20–39、40–59、60+ 岁与性别交叉分组。每个非空组的预期共现数等于前件人数 × 后件人数 / 组人数。各组实际共现数之和除以各组预期数之和，得到 `observed_to_expected`。汇总表同时给出同一分母上的普通 lift，分组表保留计算所用的计数。 |
+| `rule_increment.csv` | 对双前件、单后件的三项规则，在发现集选出对同一后件置信度最高的单项前件作为基线，同分取名称字典序靠前者。两个样本都沿用该基线，比对联合支持度与置信度。变化量是完整规则减去基线，单位为百分点。 |
+
+前件人数为零时置信度留空，独立预期数为零时观察与预期之比留空。分层比较限于年龄与性别均可分组的参与者。三项分析给出样本内的描述性差异，留出集来自同一调查周期。
+
 ## 课程交付
 
 用默认配置完成 `run --check-with-r` 后，从同一次运行的表图生成英文海报和报告。
@@ -46,4 +58,4 @@ python -m nhanes_project run --config config/analysis.toml --check-with-r
 python -m nhanes_project.materials
 ```
 
-默认写入 `output/pdf/Poster.pdf`（A1 横版）和 `output/pdf/Report.pdf`（A4，8 页）。[讲稿与答辩要点](doc/poster-talk.md)适用于约四分钟的海报展示。交付 ZIP 包含两份 PDF、讲稿、运行清单、汇总表图和可复跑的源代码。原始 XPT 由运行入口下载，参与者级划分表可由工作流在本地生成。复核时对照输入 SHA-256、样本数、候选哈希和数值表，计时数据随环境波动。
+默认写入 `output/pdf/Poster.pdf`（A1 横版）和 `output/pdf/Report.pdf`（A4，9 页，第 5 页为锁定规则的三项验证）。[讲稿与答辩要点](doc/poster-talk.md)适用于约四分钟的海报展示。交付 ZIP 包含两份 PDF、讲稿、运行清单、汇总表图和可复跑的源代码。原始 XPT 由运行入口下载，参与者级划分表可由工作流在本地生成。复核时对照输入 SHA-256、样本数、候选哈希和数值表，计时数据随环境波动。

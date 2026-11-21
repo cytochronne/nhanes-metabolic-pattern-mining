@@ -17,10 +17,7 @@ from .mining import (
     read_locked_candidates, to_transactions,
 )
 from .survey import crosscheck_with_r, weighted_results
-
-
-def contains_itemset(frame, name):
-    return frame[list(decode_itemset(name))].all(axis=1)
+from .rule_validation import compare_locked_rules, contains_itemset
 
 
 def demographics_adjusted_logit(valid, present, minimum):
@@ -206,6 +203,8 @@ def run_validation(frame, discovery, validation, config, output, manifest, check
 
     tables = output / "tables"
     candidates = read_locked_candidates(tables / "candidate_itemsets.csv", manifest["candidate_sha256"])
+    for name, table in compare_locked_rules(discovery, validation, candidates, config["mining"]).items():
+        write_table(tables, name, table)
     minimum = config["validation"]["minimum_events_and_nonevents"]
     health = validate_health(validation, candidates, minimum)
     weighted, design = weighted_results(frame, candidates, config["survey"])

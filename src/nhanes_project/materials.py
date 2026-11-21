@@ -17,7 +17,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, Table, TableStyle
 
 from .figures import label_itemset
-from .mining import read_locked_candidates
+from .mining import decode_itemset, read_locked_candidates
 
 
 INK = colors.HexColor("#102F3F")
@@ -28,7 +28,7 @@ LINE = colors.HexColor("#CDDDE0")
 LIGHT = colors.HexColor("#F2F6F7")
 AUTHOR_LINE = "Yanzhe Xie (50013227)   ·   Ye Guo (50013485)   ·   Che Feng (50013502)"
 TITLE = "Mining Co-Occurring Metabolic Abnormalities in NHANES"
-REPORT_PAGES = 8
+REPORT_PAGES = 9
 
 
 def register_fonts():
@@ -132,6 +132,20 @@ class Results:
         self.benchmark = self.table("benchmark_summary")
         self.stability = self.table("subsample_stability")
         self.wide = self.table("complete_case_sensitivity")
+        replication = self.table("rule_replication")
+        identity = ["rank", "itemset", "antecedent", "consequent"]
+        discovered = replication.query("split == 'discovery'")[identity + ["lift"]]
+        self.holdout = replication.query("split == 'validation'").merge(
+            discovered.rename(columns={"lift": "discovery_lift"}), on=identity, validate="one_to_one",
+        ).merge(self.table("heldout_stratified_rules")[identity + [
+            "observed_to_expected", "stratified_expected_joint_n",
+        ]], on=identity, validate="one_to_one").sort_values("rank")
+        gains = self.table("rule_increment")
+        self.gains = gains.query("split == 'validation'").merge(
+            gains.query("split == 'discovery'")[identity + ["baseline_antecedent", "confidence_gain_pp"]]
+            .rename(columns={"confidence_gain_pp": "discovery_gain_pp"}),
+            on=[*identity, "baseline_antecedent"], validate="one_to_one",
+        ).sort_values("rank")
         self.focus = self.health.iloc[0]
         self.grid = self.table("parameter_grid")
         settings = self.settings["mining"]
@@ -188,6 +202,27 @@ def pattern_rows(results):
     ]
 
 
+def rule_label(row):
+    return f"{label_itemset(row.antecedent)} → {label_itemset(row.consequent)}"
+
+
+def replication_summary(results):
+    settings = results.settings["mining"]
+    return (f'{int(results.holdout.passes_thresholds.sum())} of {len(results.holdout)} locked rules '
+            f'met the original thresholds of {settings["min_support"]:.0%} support and '
+            f'{settings["min_confidence"]:.0%} confidence in {count(results.n["validation"])} held-out adults.')
+
+
+def stratification_summary(results):
+    pairs = results.holdout.loc[results.holdout.itemset.map(decode_itemset).str.len().eq(2)]
+    if pairs.empty:
+        return "The ratios compare joint occurrences with the counts expected within six age-by-sex groups."
+    contrast = pairs.loc[(pairs.lift - pairs.observed_to_expected).idxmax()]
+    return (f"Among two-item rules, {rule_label(contrast)} showed the largest decrease. Its lift was "
+            f"{contrast.lift:.3f} overall. The observed pair count was {contrast.observed_to_expected:.3f}× "
+            "the count expected within age and sex groups.")
+
+
 def draw_poster(results, path):
     page_width, page_height = landscape(A1)
     pdf = pdf_canvas(path, (page_width, page_height), TITLE)
@@ -199,9 +234,9 @@ def draw_poster(results, path):
     top = Region(pdf, margin, page_height - 43, width, page_height - 268)
     top.text("AIAA 3111   /   DATA MINING COURSE PROJECT", 20, 12,
              color=colors.HexColor("#9DD6D1"), font="ProjectSans-Bold")
-    top.text("Metabolic abnormalities cluster in NHANES", 64, 4, color=colors.white,
+    top.text("Which metabolic abnormalities co-occur?", 64, 4, color=colors.white,
              font="ProjectSans-Bold")
-    top.text("Association rules and self-rated health in the 2017-2018 cycle", 34, 12, color=colors.white)
+    top.text("Association rules and self-rated health in NHANES 2017–2018", 34, 12, color=colors.white)
     top.text(AUTHOR_LINE, 21, 0, color=colors.HexColor("#C7E0E3"))
 
     n, focus = results.n, results.focus
@@ -240,21 +275,30 @@ def draw_poster(results, path):
     left.note("Median elapsed time (IQR), ten paired repetitions following warm-up. Both miners matched direct "
               "counts at 2%, 5% and 10% support. Times apply to these implementations and five inputs.")
 
-    center.heading("Patterns in the discovery set")
-    center.text(f'At 5% support and 50% confidence, {int(results.main_grid["itemsets"])} itemsets and '
-                f'{int(results.main_grid["rules"])} rules passed. Five combinations were locked by positive '
-                "leverage and co-occurrence count before examining held-out health.")
-    center.figure(results.figure("rule_network"), width=col * 0.91)
-    center.table([("Rank", "Combination", "Support", "Lift")] +
-                 [(rank, item, support, lift) for rank, item, _, support, lift in pattern_rows(results)],
-                 [0.10, 0.61, 0.16, 0.13], size=8.6)
-    center.note("Support is the share of discovery participants with every item. Lift compares joint frequency "
-                "with the frequency expected under independence.")
-    center.heading("Stability")
-    center.text(f'{len(results.candidates)} of {len(results.candidates)} patterns returned in every 80% subsample '
-                f'({int(results.stability["repetitions"].iloc[0])} draws). '
-                f'When the denominator included adults with just the required measurements, frequency shifts '
-                f'were at most {results.wide["difference_pp"].abs().max():.2f} percentage points.')
+    center.heading("Which rules replicated?")
+    center.text(f'Discovery yielded {int(results.main_grid["itemsets"])} frequent itemsets and '
+                f'{int(results.main_grid["rules"])} rules. We ranked combinations by leverage and joint count. '
+                + replication_summary(results))
+    center.table([("Rule in discovery rank order", "Discovery lift", "Holdout lift")] + [
+        (f"{row.rank}. {rule_label(row)}", f"{row.discovery_lift:.3f}", f"{row.lift:.3f}")
+        for row in results.holdout.itertuples(index=False)
+    ], [0.65, 0.18, 0.17])
+    center.note("Lift compares observed co-occurrence with the frequency expected under independence. "
+                "Values above 1 indicate excess co-occurrence.")
+    center.heading("How much does age and sex composition matter?")
+    center.text(stratification_summary(results))
+    center.heading("What does a second condition add?")
+    center.table([("Rule", "Single-condition baseline", "Confidence gain¹", "Support change¹")] + [
+        (str(row.rank), label_itemset(row.baseline_antecedent), f"{row.confidence_gain_pp:+.2f}",
+         f"{row.support_change_pp:+.2f}") for row in results.gains.itertuples(index=False)
+    ], [0.11, 0.40, 0.25, 0.24])
+    center.note("¹ Holdout differences in percentage points. Discovery confidence determined which single "
+                "condition to keep as the baseline. Both longer rules gained confidence and covered fewer adults.")
+    center.heading("Discovery stability")
+    center.text(f'{int(results.stability.reselection_rate.eq(1).sum())} combinations appeared in every one '
+                f'of {int(results.stability.repetitions.iloc[0])} discovery subsamples. Requiring only the '
+                f'measurements in each combination shifted prevalence by at most '
+                f'{results.wide.difference_pp.abs().max():.2f} percentage points.')
 
     right.heading("Health in the held-out sample")
     right.text(f'Among {count(n["validation_valid_health"])} adults with valid health responses, '
@@ -319,7 +363,8 @@ def report_intro(pdf, results):
         f"{percent(focus['present_proportion'])} of participants with that pair and "
         f"{percent(focus['absent_proportion'])} of the remaining participants reported fair or poor health. "
         f"The age- and sex-adjusted odds ratio was {odds(focus)}. "
-        "All five combinations returned in every one of 100 discovery subsamples. Independent "
+        f"{replication_summary(results)} Stratification by age and sex reduced the observed-to-expected "
+        "ratios. Adding a second condition raised confidence while reducing joint support. Independent "
         "R survey estimates agreed with the Python weighted proportions and standard errors. "
         "The results describe cross-sectional relationships in the adult complete-case analysis."
     )
@@ -334,10 +379,11 @@ def report_intro(pdf, results):
     page.heading("Analysis design")
     page.table([
         ("Discovery", "Held-out validation", "Weighted description"),
-        (f'{count(n["discovery"])} transactions', f'{count(n["validation_valid_health"])} valid responses',
+        (f'{count(n["discovery"])} transactions', f'{count(n["validation"])} transactions, '
+         f'{count(n["validation_valid_health"])} health responses',
          f'{count(n["adult_mec_complete_items"])} adult complete cases'),
-        ("Compare both miners and rank combinations by leverage", "Compare self-rated health by "
-         "combination and adjust for age and sex", "Use MEC weights and Taylor variance over survey domains"),
+        ("Compare both miners and rank combinations by leverage", "Retest locked rules and compare "
+         "self-rated health by combination", "Use MEC weights and Taylor variance over survey domains"),
     ], [1 / 3, 1 / 3, 1 / 3], size=9)
     pdf.showPage()
 
@@ -433,6 +479,39 @@ def report_discovery_figures(pdf, results):
         "HbA1c and central obesity had greater lift, consistent with its lower expected joint "
         "frequency under independence.", space=0,
     )
+    pdf.showPage()
+
+
+def report_rule_validation(pdf, results):
+    page = report_page(pdf, "Held-out validation", "Do the discovery rules replicate?")
+    page.text(f"We fixed each rule and its direction in {count(results.n['discovery'])} discovery "
+              "participants and tested it in all complete holdout transactions, regardless of health response. "
+              + replication_summary(results))
+    page.table([("Locked rule", "Joint n", "Support", "Confidence", "Discovery lift", "Holdout lift")] + [
+        (f"{row.rank}. {rule_label(row)}", count(row.joint_n), percent(row.support), percent(row.confidence),
+         f"{row.discovery_lift:.3f}", f"{row.lift:.3f}") for row in results.holdout.itertuples(index=False)
+    ], [0.37, 0.10, 0.12, 0.15, 0.13, 0.13], size=8.6)
+    page.note("Counts, support and confidence use the unweighted holdout. BP denotes blood pressure.", space=5)
+    page.heading("Co-occurrence within age and sex groups")
+    page.text("Within each age band (20–39, 40–59 and 60+) and sex, the expected joint count under "
+              "independence equals the antecedent count × consequent count / group size. The table sums "
+              "expected counts across the six groups.", space=4)
+    page.table([("Rule above", "Observed joint n", "Expected joint n (stratified)", "Observed / expected")] + [
+        (row.rank, row.joint_n, f"{row.stratified_expected_joint_n:.1f}", f"{row.observed_to_expected:.3f}")
+        for row in results.holdout.itertuples(index=False)
+    ], [0.15, 0.23, 0.34, 0.28], size=8.5, space=6)
+    page.text(stratification_summary(results))
+    page.heading("Gain over a simpler rule")
+    page.text("For each two-condition antecedent we kept the outcome fixed and chose the single condition "
+              "with higher discovery confidence as the baseline. Changes below are in percentage points.")
+    page.table([("Rule", "Baseline", "Discovery confidence gain", "Holdout confidence gain",
+                 "Holdout support change")] + [
+        (row.rank, label_itemset(row.baseline_antecedent), f"{row.discovery_gain_pp:+.2f}",
+         f"{row.confidence_gain_pp:+.2f}", f"{row.support_change_pp:+.2f}")
+        for row in results.gains.itertuples(index=False)
+    ], [0.08, 0.26, 0.22, 0.22, 0.22], size=8.6, space=6)
+    page.text("Both longer rules covered fewer participants and gained less confidence in the holdout "
+              "than in discovery.")
     pdf.showPage()
 
 
@@ -635,7 +714,7 @@ def report_reproduction(pdf, results):
 def draw_report(results, path):
     pdf = pdf_canvas(path, A4, TITLE)
     for render in (report_intro, report_cohort, report_mining, report_discovery_figures,
-                   report_health, report_weighted, report_robustness, report_reproduction):
+                   report_rule_validation, report_health, report_weighted, report_robustness, report_reproduction):
         render(pdf, results)
     pdf.save()
 

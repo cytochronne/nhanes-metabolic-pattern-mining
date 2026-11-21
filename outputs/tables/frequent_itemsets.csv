@@ -1,0 +1,57 @@
+itemset,size,count,n,support,min_support,minimum_count
+central_obesity,1,1910,3159,0.6046217157328269,0.02,64
+elevated_hba1c,1,1432,3159,0.4533080088635644,0.02,64
+elevated_bp,1,1258,3159,0.398227287116176,0.02,64
+low_hdl,1,942,3159,0.2981956315289649,0.02,64
+high_total_chol,1,348,3159,0.11016144349477683,0.02,64
+central_obesity + elevated_hba1c,2,1026,3159,0.3247863247863248,0.02,64
+central_obesity + elevated_bp,2,836,3159,0.2646407090851535,0.02,64
+elevated_bp + elevated_hba1c,2,729,3159,0.23076923076923078,0.02,64
+central_obesity + low_hdl,2,719,3159,0.2276036720481165,0.02,64
+elevated_hba1c + low_hdl,2,496,3159,0.15701171256726812,0.02,64
+elevated_bp + low_hdl,2,395,3159,0.12503956948401393,0.02,64
+central_obesity + high_total_chol,2,225,3159,0.07122507122507123,0.02,64
+elevated_hba1c + high_total_chol,2,180,3159,0.05698005698005698,0.02,64
+elevated_bp + high_total_chol,2,173,3159,0.054764165875276986,0.02,64
+high_total_chol + low_hdl,2,98,3159,0.03102247546691991,0.02,64
+central_obesity + elevated_bp + elevated_hba1c,3,523,3159,0.16555872111427666,0.02,64
+central_obesity + elevated_hba1c + low_hdl,3,426,3159,0.13485280151946819,0.02,64
+central_obesity + elevated_bp + low_hdl,3,318,3159,0.100664767331434,0.02,64
+elevated_bp + elevated_hba1c + low_hdl,3,251,3159,0.07945552389996835,0.02,64
+central_obesity + elevated_hba1c + high_total_chol,3,128,3159,0.04051915163026274,0.02,64
+central_obesity + elevated_bp + high_total_chol,3,108,3159,0.03418803418803419,0.02,64
+elevated_bp + elevated_hba1c + high_total_chol,3,98,3159,0.03102247546691991,0.02,64
+central_obesity + high_total_chol + low_hdl,3,77,3159,0.02437480215257993,0.02,64
+elevated_hba1c + high_total_chol + low_hdl,3,67,3159,0.021209243431465654,0.02,64
+central_obesity,1,1910,3159,0.6046217157328269,0.05,158
+elevated_hba1c,1,1432,3159,0.4533080088635644,0.05,158
+elevated_bp,1,1258,3159,0.398227287116176,0.05,158
+low_hdl,1,942,3159,0.2981956315289649,0.05,158
+high_total_chol,1,348,3159,0.11016144349477683,0.05,158
+central_obesity + elevated_hba1c,2,1026,3159,0.3247863247863248,0.05,158
+central_obesity + elevated_bp,2,836,3159,0.2646407090851535,0.05,158
+elevated_bp + elevated_hba1c,2,729,3159,0.23076923076923078,0.05,158
+central_obesity + low_hdl,2,719,3159,0.2276036720481165,0.05,158
+elevated_hba1c + low_hdl,2,496,3159,0.15701171256726812,0.05,158
+elevated_bp + low_hdl,2,395,3159,0.12503956948401393,0.05,158
+central_obesity + high_total_chol,2,225,3159,0.07122507122507123,0.05,158
+elevated_hba1c + high_total_chol,2,180,3159,0.05698005698005698,0.05,158
+elevated_bp + high_total_chol,2,173,3159,0.054764165875276986,0.05,158
+central_obesity + elevated_bp + elevated_hba1c,3,523,3159,0.16555872111427666,0.05,158
+central_obesity + elevated_hba1c + low_hdl,3,426,3159,0.13485280151946819,0.05,158
+central_obesity + elevated_bp + low_hdl,3,318,3159,0.100664767331434,0.05,158
+elevated_bp + elevated_hba1c + low_hdl,3,251,3159,0.07945552389996835,0.05,158
+central_obesity,1,1910,3159,0.6046217157328269,0.1,316
+elevated_hba1c,1,1432,3159,0.4533080088635644,0.1,316
+elevated_bp,1,1258,3159,0.398227287116176,0.1,316
+low_hdl,1,942,3159,0.2981956315289649,0.1,316
+high_total_chol,1,348,3159,0.11016144349477683,0.1,316
+central_obesity + elevated_hba1c,2,1026,3159,0.3247863247863248,0.1,316
+central_obesity + elevated_bp,2,836,3159,0.2646407090851535,0.1,316
+elevated_bp + elevated_hba1c,2,729,3159,0.23076923076923078,0.1,316
+central_obesity + low_hdl,2,719,3159,0.2276036720481165,0.1,316
+elevated_hba1c + low_hdl,2,496,3159,0.15701171256726812,0.1,316
+elevated_bp + low_hdl,2,395,3159,0.12503956948401393,0.1,316
+central_obesity + elevated_bp + elevated_hba1c,3,523,3159,0.16555872111427666,0.1,316
+central_obesity + elevated_hba1c + low_hdl,3,426,3159,0.13485280151946819,0.1,316
+central_obesity + elevated_bp + low_hdl,3,318,3159,0.100664767331434,0.1,316
