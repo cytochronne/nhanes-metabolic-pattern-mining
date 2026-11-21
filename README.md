@@ -16,3 +16,12 @@ python -m nhanes_project prepare --config config/analysis.toml
 首次运行从 CDC 自动下载七个 XPT 至 `data/raw/`，后续运行使用可成功读取且字段和主键有效的缓存。修改 [analysis.toml](config/analysis.toml) 可以指定路径、阈值和随机种子。相对路径以当前工作目录为基准。
 
 数据阶段的输出在 `outputs/tables/`，包括组件合并审核、样本流失、缺失率、完整与不完整样本的人口统计，以及可核对的发现集和验证集成员编号。本地数据、分析产物和虚拟环境受 Git 忽略。运行状态、参数、版本、人数和输入哈希见 `outputs/run_manifest.json`。
+
+运行清洗、模式挖掘和性能比较。
+
+```bash
+python -m nhanes_project mine --config config/analysis.toml
+python -m unittest discover -s tests -v
+```
+
+挖掘阶段在发现集上用直接枚举验证 Apriori 和 FP-Growth。支持度分母包含五项均正常的参与者。输出包含 `frequent_itemsets.csv`、`association_rules.csv`、`parameter_grid.csv`、`parameter_rankings.csv` 和计时汇总。两种算法用同一随机顺序的前缀样本计时，预热后交替运行。单次计时和软件环境可从 `benchmark_repeats.csv`、`benchmark_summary.csv` 和运行清单核对。候选项集在发现集锁定至 `candidate_itemsets.csv`，其 SHA-256 记入运行清单。

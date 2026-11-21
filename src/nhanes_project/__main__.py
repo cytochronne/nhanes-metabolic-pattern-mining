@@ -9,13 +9,7 @@ import platform
 import sys
 import tomllib
 
-from .data import atomic_write, cohort_tables, load_and_merge, prepare_cohorts
-
-
-def write_table(folder, name, frame):
-    path = folder / f"{name}.csv"
-    atomic_write(path, frame.to_csv(index=False, lineterminator="\n").encode())
-    return path
+from .data import atomic_write, cohort_tables, load_and_merge, prepare_cohorts, write_table
 
 
 def execute(config_path, command, check_with_r=False):

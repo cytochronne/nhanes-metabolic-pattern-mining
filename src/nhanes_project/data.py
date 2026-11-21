@@ -47,6 +47,12 @@ def atomic_write(path, contents):
             temporary.unlink(missing_ok=True)
 
 
+def write_table(folder, name, frame):
+    path = folder / f"{name}.csv"
+    atomic_write(path, frame.to_csv(index=False, lineterminator="\n").encode())
+    return path
+
+
 def read_xpt(raw, component):
     if not raw.startswith(b"HEADER RECORD*******LIBRARY HEADER RECORD"):
         raise ValueError(f"{component}: response was not a SAS XPORT file")
