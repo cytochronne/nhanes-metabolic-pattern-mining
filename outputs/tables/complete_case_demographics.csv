@@ -1,0 +1,3 @@
+group,n,age_mean,age_sd,age_median,male_n,female_n,unknown_sex_n
+complete_items,4514,51.21267168808152,17.499161672677268,53.0,2212,2302,0
+incomplete_items,751,52.60186418109188,18.777999800835957,54.0,329,422,0

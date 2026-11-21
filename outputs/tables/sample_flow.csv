@@ -1,0 +1,12 @@
+stage,n
+merged_demographics,9254
+adult_mec,5265
+adult_mec_complete_items,4514
+adult_mec_complete_items_valid_health,4326
+discovery,3159
+discovery_valid_health,3018
+validation,1355
+validation_valid_health,1308
+discovery_zero_abnormalities,484
+validation_zero_abnormalities,230
+all_ages_positive_mec_weight,8704

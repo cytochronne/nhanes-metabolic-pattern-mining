@@ -1,0 +1,45 @@
+[data]
+cycle = "2017-2018"
+base_url = "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles"
+raw_dir = "data/raw"
+output_dir = "outputs"
+
+[eligibility]
+minimum_age = 20
+discovery_fraction = 0.70
+seed = 3111
+
+[thresholds]
+waist_male_cm = 102
+waist_female_cm = 88
+systolic_mmhg = 130
+diastolic_mmhg = 85
+hba1c_percent = 5.7
+hdl_male_mg_dl = 40
+hdl_female_mg_dl = 50
+total_cholesterol_mg_dl = 240
+
+[mining]
+max_itemset_size = 3
+min_support = 0.05
+min_confidence = 0.50
+support_grid = [0.02, 0.05, 0.10]
+confidence_grid = [0.30, 0.50, 0.70]
+minimum_candidate_count = 30
+maximum_candidates = 5
+
+[benchmark]
+fractions = [0.25, 0.50, 1.00]
+repeats = 10
+
+[validation]
+minimum_events_and_nonevents = 10
+
+[survey]
+minimum_domain_n = 30
+minimum_effective_n = 30
+minimum_domain_df = 8
+
+[robustness]
+subsample_fraction = 0.80
+repeats = 100

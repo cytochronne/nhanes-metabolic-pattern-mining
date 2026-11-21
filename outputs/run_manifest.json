@@ -1,0 +1,169 @@
+{
+  "status": "complete",
+  "command": "run",
+  "started_at": "2026-11-21T12:31:26.522029+00:00",
+  "config": {
+    "data": {
+      "cycle": "2017-2018",
+      "base_url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles",
+      "raw_dir": "data/raw",
+      "output_dir": "outputs"
+    },
+    "eligibility": {
+      "minimum_age": 20,
+      "discovery_fraction": 0.7,
+      "seed": 3111
+    },
+    "thresholds": {
+      "waist_male_cm": 102,
+      "waist_female_cm": 88,
+      "systolic_mmhg": 130,
+      "diastolic_mmhg": 85,
+      "hba1c_percent": 5.7,
+      "hdl_male_mg_dl": 40,
+      "hdl_female_mg_dl": 50,
+      "total_cholesterol_mg_dl": 240
+    },
+    "mining": {
+      "max_itemset_size": 3,
+      "min_support": 0.05,
+      "min_confidence": 0.5,
+      "support_grid": [
+        0.02,
+        0.05,
+        0.1
+      ],
+      "confidence_grid": [
+        0.3,
+        0.5,
+        0.7
+      ],
+      "minimum_candidate_count": 30,
+      "maximum_candidates": 5
+    },
+    "benchmark": {
+      "fractions": [
+        0.25,
+        0.5,
+        1.0
+      ],
+      "repeats": 10
+    },
+    "validation": {
+      "minimum_events_and_nonevents": 10
+    },
+    "survey": {
+      "minimum_domain_n": 30,
+      "minimum_effective_n": 30,
+      "minimum_domain_df": 8
+    },
+    "robustness": {
+      "subsample_fraction": 0.8,
+      "repeats": 100
+    }
+  },
+  "software": {
+    "python": "3.13.12",
+    "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.35",
+    "nhanes-project": "0.1.0",
+    "numpy": "2.2.6",
+    "pandas": "2.2.3",
+    "scipy": "1.15.3",
+    "statsmodels": "0.14.5",
+    "matplotlib": "3.10.3",
+    "reportlab": "4.4.3"
+  },
+  "stages": {
+    "prepare": "complete",
+    "mine": "complete",
+    "validate": "complete"
+  },
+  "inputs": [
+    {
+      "component": "DEMO_J",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/DEMO_J.XPT",
+      "sha256": "c0b46e0345ea19404928656277c8b0d10b0cca348a9b2fe4fc3c67e8b7ee73ec",
+      "bytes": 3412720,
+      "rows": 9254,
+      "codebook_url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/DEMO_J.htm"
+    },
+    {
+      "component": "BMX_J",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/BMX_J.XPT",
+      "sha256": "8d675e42d8826ac98714b2c3dd4c5138a5e353fb4424f7eff5e6db4a01ce838a",
+      "bytes": 1466000,
+      "rows": 8704,
+      "codebook_url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/BMX_J.htm"
+    },
+    {
+      "component": "BPX_J",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/BPX_J.XPT",
+      "sha256": "f98f1d9a4c18173e715c749b4294f6f1525140d5ad5751316bb17cc038fb3423",
+      "bytes": 1466000,
+      "rows": 8704,
+      "codebook_url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/BPX_J.htm"
+    },
+    {
+      "component": "GHB_J",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/GHB_J.XPT",
+      "sha256": "35f07094573a0061a03ed609a5a363b34eb1b1c7065d1623b43d72e132a8a654",
+      "bytes": 103520,
+      "rows": 6401,
+      "codebook_url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/GHB_J.htm"
+    },
+    {
+      "component": "HDL_J",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/HDL_J.XPT",
+      "sha256": "9f4eb41b89f0c9f3d6262f873e671eeb2f2eb40581a8426b2a3c8fd4fc19439e",
+      "bytes": 179680,
+      "rows": 7435,
+      "codebook_url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/HDL_J.htm"
+    },
+    {
+      "component": "TCHOL_J",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/TCHOL_J.XPT",
+      "sha256": "0291a6a4f6d82dac8392c8c992b519946824dfeda01647935520cf506ed9f4ab",
+      "bytes": 179680,
+      "rows": 7435,
+      "codebook_url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/TCHOL_J.htm"
+    },
+    {
+      "component": "HSQ_J",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/HSQ_J.XPT",
+      "sha256": "60d10f50da856e71ba8ab80e5556947b4473bc7ced19e4a582a533a382ea1e70",
+      "bytes": 604400,
+      "rows": 8366,
+      "codebook_url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/HSQ_J.htm"
+    }
+  ],
+  "sample_sizes": {
+    "merged_demographics": 9254,
+    "adult_mec": 5265,
+    "adult_mec_complete_items": 4514,
+    "adult_mec_complete_items_valid_health": 4326,
+    "discovery": 3159,
+    "discovery_valid_health": 3018,
+    "validation": 1355,
+    "validation_valid_health": 1308,
+    "discovery_zero_abnormalities": 484,
+    "validation_zero_abnormalities": 230,
+    "all_ages_positive_mec_weight": 8704
+  },
+  "candidate_count": 5,
+  "candidate_sha256": "3c00e8fbb982b4998ba3a296523a77fafa666a9947f74472f419e642426fd3ab",
+  "verified_support_thresholds": [
+    0.02,
+    0.05,
+    0.1
+  ],
+  "r_survey_crosscheck": {
+    "status": "complete",
+    "matched_estimates": 15,
+    "r": "4.1.2",
+    "survey": "4.1.1"
+  },
+  "logistic_model_status": {
+    "fitted": 5
+  },
+  "finished_at": "2026-11-21T12:31:29.039842+00:00"
+}

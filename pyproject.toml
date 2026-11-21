@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nhanes-project"
+version = "0.1.0"
+description = "Metabolic abnormality pattern mining in NHANES 2017–2018"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy==2.2.6",
+    "pandas==2.2.3",
+    "scipy==1.15.3",
+    "statsmodels==0.14.5",
+    "matplotlib==3.10.3",
+    "reportlab==4.4.3",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+nhanes_project = ["crosscheck.R"]

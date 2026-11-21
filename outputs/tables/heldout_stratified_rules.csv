@@ -1,0 +1,6 @@
+rank,itemset,antecedent,consequent,n,observed_joint_n,pooled_lift,stratified_expected_joint_n,observed_to_expected
+1,central_obesity + elevated_hba1c,central_obesity,elevated_hba1c,1355,438,1.190370174256282,390.0668428771909,1.1228844696699853
+2,elevated_bp + elevated_hba1c,elevated_bp,elevated_hba1c,1355,320,1.3069176816678874,293.4750842176985,1.0903821728274057
+3,central_obesity + low_hdl,low_hdl,central_obesity,1355,304,1.2747573776985541,244.44247749146172,1.2436463707933847
+4,central_obesity + elevated_bp + elevated_hba1c,central_obesity + elevated_bp,elevated_hba1c,1355,238,1.3744970676486634,205.87925510741036,1.1560173941557723
+5,central_obesity + elevated_hba1c + low_hdl,elevated_hba1c + low_hdl,central_obesity,1355,170,1.331564465408805,139.17174390837633,1.2215123215810204
