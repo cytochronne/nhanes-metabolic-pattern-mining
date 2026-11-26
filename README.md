@@ -58,4 +58,4 @@ python -m nhanes_project run --config config/analysis.toml --check-with-r
 python -m nhanes_project.materials
 ```
 
-海报生成器从 `AIAA3111_Poster_Templates_80x100cm/` 读取 D 款 NavyGold 模板，并调用 LibreOffice Impress 导出 PDF（系统需提供 `libreoffice` 或 `soffice` 命令）。输出包括单独提交的 `output/pdf/Poster.pdf`（80 × 100 厘米，单页竖版）、可编辑的 `output/pdf/Poster.pptx` 和 `output/pdf/Report.pdf`（A4，9 页）。[讲稿与答辩要点](doc/poster-talk.md)适用于约四分钟的海报展示。交付 ZIP 包含两份 PDF、讲稿、运行清单、汇总表图、海报模板和可复跑的源代码。原始 XPT 由运行入口下载，参与者级划分表可由工作流在本地生成。复核时对照输入 SHA-256、样本数、候选哈希和数值表，计时数据随环境波动。
+海报生成器从 `AIAA3111_Poster_Templates_80x100cm/` 读取 A 款 PurpleSidebar 模板，并调用 LibreOffice Impress 导出 PDF（系统需提供 `libreoffice` 或 `soffice` 命令）。输出包括单独提交的 `output/pdf/Poster.pdf`（80 × 100 厘米，单页竖版）、可编辑的 `output/pdf/Poster.pptx` 和 `output/pdf/Report.pdf`（A4，9 页）。[讲稿与答辩要点](doc/poster-talk.md)适用于约四分钟的海报展示。交付 ZIP 包含两份 PDF、讲稿、运行清单、汇总表图、海报模板和可复跑的源代码。原始 XPT 由运行入口下载，参与者级划分表可由工作流在本地生成。复核时对照输入 SHA-256、样本数、候选哈希和数值表，计时数据随环境波动。

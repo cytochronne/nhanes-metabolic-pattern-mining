@@ -1,4 +1,4 @@
-"""Populate the course's NavyGold PowerPoint template and export its single page."""
+"""Populate the course's PurpleSidebar PowerPoint template and export its single page."""
 
 from copy import deepcopy
 from io import BytesIO
@@ -16,7 +16,7 @@ from .figures import label_itemset
 
 
 TEMPLATE = (Path("AIAA3111_Poster_Templates_80x100cm") /
-            "AIAA3111_Poster_Template_D_NavyGold.pptx")
+            "AIAA3111_Poster_Template_A_PurpleSidebar.pptx")
 AUTHOR_LINE = "Yanzhe Xie (50013227)   ·   Ye Guo (50013485)   ·   Che Feng (50013502)"
 NS = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
@@ -27,12 +27,13 @@ NS = {
 for prefix, uri in NS.items():
     ET.register_namespace(prefix, uri)
 
-NAVY = "0B2C52"
-INK = "1F2933"
-MUTED = "42566B"
-GOLD = "E9C879"
-WHITE = "FFFFFF"
+PURPLE = "671A86"
+INK = "2A2A2A"
+MUTED = "504858"
 EMU_PER_CM = 360000
+HEADING_PT = 32
+BODY_PT = 26
+LABEL_PT = 23
 
 
 def element(parent, tag, **attrs):
@@ -73,12 +74,13 @@ class PosterSlide:
         self.tree.append(shape)
         return shape
 
-    def text(self, name, bounds, content, size, color=INK, bold=False):
-        shape = self.copy("TextBox 11", name, bounds)
+    def text(self, name, bounds, content, size, color=INK, bold=False, source="TextBox 55"):
+        shape = self.copy(source, name, bounds)
         body = shape.find("p:txBody", NS)
         body.find("a:bodyPr", NS).set("anchor", "t")
         source_paragraph = body.find("a:p", NS)
-        body.remove(source_paragraph)
+        for original in body.findall("a:p", NS):
+            body.remove(original)
         for line in content.split("\n"):
             paragraph = deepcopy(source_paragraph)
             paragraph.find(".//a:spcPct", NS).set("val", "102000")
@@ -88,15 +90,28 @@ class PosterSlide:
             paragraph.find("a:r/a:t", NS).text = line
             body.append(paragraph)
 
-    def panel(self, title, x, y, w, h):
-        self.copy("Rounded Rectangle 10", title + " panel", (x, y, w, h))
-        self.text(title, (x+1.45, y+1.1, w-2.9, 2.45), title, 43, NAVY, True)
-        self.copy("Rectangle 12", title + " underline", (x+1.5, y+3.75, 4.5, .22))
+    def picture(self, name, relationship, bounds):
+        picture = self.copy("HKUST(GZ) Logo", name, bounds)
+        picture.find(".//p:cNvPr", NS).set("descr", name)
+        picture.find(".//a:blip", NS).set(f"{{{NS['r']}}}embed", relationship)
 
-    def table(self, rows, x, y, widths, heights):
-        shape = self.copy("Table 61", "Association rules", (x, y, sum(widths), sum(heights)))
+    def rectangle(self, name, bounds, color):
+        shape = self.copy("Rectangle 53", name, bounds)
+        props = shape.find("p:spPr", NS)
+        gradient = props.find("a:gradFill", NS)
+        fill_index = list(props).index(gradient)
+        props.remove(gradient)
+        fill = ET.Element(f"{{{NS['a']}}}solidFill")
+        element(fill, "a:srgbClr", val=color)
+        props.insert(fill_index, fill)
+
+    def table(self, name, rows, x, y, widths, heights, size):
+        shape = self.copy("Table 70", name, (x, y, sum(widths), sum(heights)))
         table = shape.find(".//a:tbl", NS)
-        for col, width in zip(table.findall("a:tblGrid/a:gridCol", NS), widths, strict=True):
+        grid = table.find("a:tblGrid", NS)
+        for extra in list(grid)[len(widths):]:
+            grid.remove(extra)
+        for col, width in zip(grid, widths, strict=True):
             col.set("w", str(round(width*EMU_PER_CM)))
         originals = table.findall("a:tr", NS)
         for row in originals:
@@ -104,9 +119,13 @@ class PosterSlide:
         for i, (values, height) in enumerate(zip(rows, heights, strict=True)):
             row = deepcopy(originals[0 if i == 0 else 1+(i-1)%2])
             row.set("h", str(round(height*EMU_PER_CM)))
+            for extra in row.findall("a:tc", NS)[len(widths):]:
+                row.remove(extra)
             for j, (cell, value) in enumerate(zip(row.findall("a:tc", NS), values, strict=True)):
                 cell.find(".//a:pPr", NS).set("algn", "l" if j == 0 else "ctr")
-                cell.find(".//a:rPr", NS).set("sz", "2450")
+                cell.find(".//a:rPr", NS).attrib.update(sz=str(round(size*100)), b=str(int(i == 0)))
+                fill = cell.find("a:tcPr/a:solidFill/a:srgbClr", NS)
+                fill.set("val", "E8DDF0" if i == 0 else ("F5EFF8" if i % 2 else "FAF8FC"))
                 cell.find(".//a:t", NS).text = value
                 cell.find("a:tcPr", NS).attrib.update(marL="135000", marR="60000")
             table.append(row)
@@ -117,20 +136,21 @@ def health_chart(health):
     buffer = BytesIO()
     with xlsxwriter.Workbook(buffer, {"in_memory": True}) as workbook:
         sheet = workbook.add_worksheet("Health")
-        sheet.write_row(0, 0, ["Discovery rule", "All items present", "At least one absent"])
+        sheet.write_row(0, 0, ["Pattern", "All abnormalities present", "At least one absent"])
         percent = workbook.add_format({"num_format": "0.0%"})
         for i, row in enumerate(health.itertuples(), 1):
             sheet.write(i, 0, f"R{row.rank}")
             sheet.write_number(i, 1, row.present_proportion, percent)
             sheet.write_number(i, 2, row.absent_proportion, percent)
         chart = workbook.add_chart({"type": "column"})
-        for col, color in [(1, NAVY), (2, "C9A24A")]:
+        font = {"name": "Georgia", "size": LABEL_PT, "color": "#" + MUTED}
+        for col, color in [(1, PURPLE), (2, "C3A4D3")]:
             chart.add_series({
                 "name": ["Health", 0, col], "categories": ["Health", 1, 0, len(health), 0],
                 "values": ["Health", 1, col, len(health), col], "fill": {"color": "#" + color},
-                "border": {"none": True}, "gap": 60,
+                "border": {"none": True}, "gap": 50,
+                "data_labels": {"value": True, "num_format": "0.0%", "position": "outside_end", "font": font},
             })
-        font = {"name": "Arial", "size": 24, "color": "#" + MUTED}
         chart.set_x_axis({"num_font": font, "line": {"color": "#8494A2"}, "major_tick_mark": "none"})
         chart.set_y_axis({"min": 0, "num_format": "0%", "num_font": font,
                           "major_unit": .10, "major_tick_mark": "none", "line": {"none": True},
@@ -141,6 +161,12 @@ def health_chart(health):
         sheet.insert_chart("E2", chart)
     with ZipFile(buffer) as book:
         chart_xml = ET.fromstring(book.read("xl/charts/chart1.xml"))
+    # Impress otherwise includes series and category names in each value label.
+    for labels in chart_xml.findall(".//c:dLbls", NS):
+        index = list(labels).index(labels.find("c:showVal", NS))
+        for offset, name in enumerate(("showLegendKey", "showCatName", "showSerName")):
+            flag = ET.Element(f"{{{NS['c']}}}{name}", val="0")
+            labels.insert(index if offset == 0 else index + offset + 1, flag)
     chart_xml.remove(chart_xml.find("c:printSettings", NS))
     external = element(chart_xml, "c:externalData", **{f"{{{NS['r']}}}id": "rId1"})
     element(external, "c:autoUpdate", val="0")
@@ -150,90 +176,129 @@ def health_chart(health):
 def build_slide(slide, r, authors):
     n, settings = r.n, r.settings["mining"]
     lead = r.candidates.iloc[0]
-    health = r.health.set_index("rank").loc[lead["rank"]]
-    weighted = r.weighted.loc[r.weighted["rank"].eq(lead["rank"]) &
-                              r.weighted.metric.eq("itemset_prevalence")].iloc[0]
-    pair = label_itemset(lead.itemset).replace(" + ", " and ").replace("Elevated", "elevated")
-    bench = r.benchmark.loc[r.benchmark.n.eq(r.benchmark.n.max())].set_index("algorithm")
-    slide.copy("Rectangle 1")
-    for name in ("Oval 4", "HKUST(GZ) Logo", "TextBox 6", "TextBox 7", "Rectangle 9"):
-        slide.copy(name)
-    slide.text("Title", (3, 1.8, 54, 6.9), "Which metabolic abnormalities\noccur together?", 78, WHITE)
-    slide.text("Subtitle", (3.1, 9.25, 65, 2), "Association rules and self-rated health in NHANES 2017–2018",
-               36, GOLD)
-    slide.text("Authors", (3.1, 12.1, 72, 1.8), authors, 29, WHITE)
+    for name in slide.source:
+        number = name.split()[-1]
+        if (name == "HKUST(GZ) Logo" or number.isdigit() and
+                (int(number) <= 26 or int(number) in
+                 {31, 32, 33, 35, 36, 50, 51, 53, 54, 80, 81, 83})):
+            slide.copy(name)
 
-    slide.panel("Research question and sample", 2.5, 17.4, 36.7, 22.2)
-    slide.text("Question", (4, 22.2, 33.7, 5.4),
-               "When a routine exam flags more than one measure, which findings tend to appear together? "
-               "Do adults with those combinations report poorer health?", 34)
-    slide.text("Cohort", (4, 28.3, 33.7, 5.3),
-               f"We linked seven U.S. survey files. Of {n['adult_mec']:,} examined adults aged 20 or older, "
-               f"{n['adult_mec_complete_items']:,} had all five measures.", 32)
-    slide.text("Discovery split", (4, 34.9, 16.4, 2.3), f"{n['discovery']:,} discovery", 42, NAVY, True)
-    slide.text("Validation split", (20.9, 34.9, 16.8, 2.3), f"{n['validation']:,} holdout", 42, NAVY, True)
-    slide.text("Split design", (4, 37.2, 33.5, 1.6), "Random split by participant", 25, MUTED)
+    slide.text("Title", (3, 8.55, 59, 8), "Which metabolic abnormalities\noccur together?",
+               81, bold=True, source="TextBox 27")
+    slide.text("Authors", (3, 16.6, 59, 1.95), authors, 29, source="TextBox 27")
+    slide.text("Subtitle", (3, 18.65, 59, 1.85), "Association rules and self-rated health in NHANES 2017–2018",
+               BODY_PT, source="TextBox 27")
+    slide.text("Course", (63, 11.6, 15, 5), "AIAA 3111\nData Mining", 40, PURPLE, True, source="TextBox 27")
 
-    slide.panel("Pattern mining and validation", 40.7, 17.4, 36.8, 22.2)
-    slide.text("Inputs", (42.2, 22.2, 33.8, 4.9),
-               "We flagged central obesity, high blood pressure (BP), elevated glycated hemoglobin (HbA1c), "
-               "low HDL and high total cholesterol. We kept adults with zero flags.", 31)
-    slide.text("Mining criteria", (42.2, 28.1, 33.8, 4.9),
-               f"Apriori and FP-Growth searched sets of up to {settings['max_itemset_size']} items. "
-               f"Rules needed ≥{settings['min_support']:.0%} support and ≥{settings['min_confidence']:.0%} confidence.", 31)
-    slide.text("Validation plan", (42.2, 33.6, 33.8, 5.1),
-               f"We ranked sets by excess co-occurrence over independence (leverage), then by count. "
-               f"We tested the top {len(r.holdout)} rules in the holdout.", 31)
+    slide.text("Research question", (2.6, 25, 22.4, 4.2),
+               "Which metabolic abnormalities occur together, and how do adults with these patterns rate their health?", BODY_PT, bold=True)
+    cohort = [("Sample selection", "Participants"),
+              ("Seven files linked", f"{n['merged_demographics']:,}"),
+              ("Examined, age 20+", f"{n['adult_mec']:,}"),
+              ("All five measures", f"{n['adult_mec_complete_items']:,}"),
+              ("Discovery / holdout", f"{n['discovery']:,} / {n['validation']:,}")]
+    slide.table("Cohort flow", cohort, 2.6, 29.6, [13.3, 9.3], [1.75]*5, LABEL_PT)
+    slide.text("Sample split", (2.6, 39.2, 22.4, 5.8),
+               f"We randomly split the {n['adult_mec_complete_items']:,} adults with complete measurements: "
+               f"{n['discovery']:,} to find patterns and {n['validation']:,} to test them.", BODY_PT)
 
-    slide.panel("Which rules replicated?", 2.5, 41.0, 36.7, 36.8)
-    slide.text("Leading support", (4, 45.75, 10.1, 3.55), f"{lead.support:.1%}", 72, NAVY, True)
-    slide.text("Leading pair", (14.4, 45.8, 23.25, 5.0),
-               f"of discovery adults had both {pair.lower().replace('hba1c', 'HbA1c')} "
-               f"({int(lead.joint_n):,}/{int(lead.n):,}).", 30)
-    slide.text("Rule key", (4, 51.15, 33.7, 2.8),
-               "Ranked by discovery leverage. Leverage is the percentage-point difference between "
-               "observed and expected co-occurrence under independence.", 27, MUTED)
-    rules = [("Rule", "Discovery leverage (pp)", "Holdout leverage (pp)")]
+    slide.text("Measures", (2.6, 42.9, 22.4, 3.1),
+               "Measures covered waist size, blood pressure (BP), HbA1c, HDL and total cholesterol.", BODY_PT)
+    slide.text("Mining criteria", (2.6, 49.7, 22.4, 6.9),
+               f"Apriori and FP-Growth searched for sets of up to {settings['max_itemset_size']} abnormalities. "
+               f"Rules needed ≥{settings['min_support']:.0%} support and ≥{settings['min_confidence']:.0%} confidence. "
+               "Adults with no abnormalities counted toward support.", BODY_PT)
+    slide.text("Benchmark heading", (2.6, 56.6, 22.4, 2.9), "Median mining time by sample size (ms)", HEADING_PT, PURPLE, True)
+    timings = [("Adults", "Apriori", "FP-Growth")]
+    for size, group in r.benchmark.groupby("n", sort=True):
+        by_name = group.set_index("algorithm")
+        timings.append((f"{size:,}", f"{by_name.loc['Apriori', 'median_ms']:.3f}",
+                        f"{by_name.loc['FP-Growth', 'median_ms']:.3f}"))
+    slide.table("Algorithm benchmark", timings, 2.6, 60.0, [4.3, 9.1, 9.2], [1.7]*len(timings), LABEL_PT)
+    slide.text("Timing result", (2.6, 67.6, 22.4, 3.5),
+               "FP-Growth was faster than Apriori at all three sample sizes.", BODY_PT)
+    slide.text("Mining conclusion", (2.6, 76.1, 22.4, 5.7),
+               f"Apriori and FP-Growth found the same {int(r.main_grid.rules)} rules. In the holdout, the five "
+               "selected combinations of metabolic abnormalities again occurred more often than expected by chance "
+               "under independence.", BODY_PT)
+    slide.text("Health conclusion", (2.6, 82.45, 22.4, 4.6),
+               "For every combination, adults with all its abnormalities more often rated their health as fair "
+               "or poor than adults without the full pattern.", BODY_PT)
+    slide.text("Limits", (2.6, 87.8, 22.4, 3.1),
+               "The survey measured abnormalities and self-rated health at the same time, limiting causal interpretation.", BODY_PT)
+
+    slide.text("Discovery heading", (28.45, 24.75, 49.4, 2),
+               "Which abnormalities occurred together most often?", HEADING_PT, PURPLE, True)
+    slide.picture("Discovery co-occurrence heatmap", "rIdHeatmap", (28.25, 26.6, 30.5, 30.5*5/7.8))
+    slide.text("Heatmap guide", (59.7, 28.4, 18.45, 6.5),
+               "Choose one abnormality on each axis. Their cell shows the percentage of discovery adults who had both. "
+               "The diagonal shows how common each abnormality was.", BODY_PT)
+    slide.text("Discovery counts", (59.7, 37.2, 18.45, 7.6),
+               f"Central obesity and elevated HbA1c were the most common pair. Both occurred in "
+               f"{lead.support:.1%} of the discovery sample ({int(lead.joint_n):,} of {int(lead.n):,} adults).", BODY_PT)
+
+    slide.text("Rules heading", (28.45, 45.95, 49.6, 1.6),
+               f"Top {len(r.holdout)} association rules", HEADING_PT, PURPLE, True)
+    slide.text("Rule comparison", (28.45, 47.55, 49.6, 3.2),
+               f"From {int(r.main_grid.itemsets)} frequent sets and {int(r.main_grid.rules)} rules, we selected five patterns by discovery leverage. "
+               "All five occurred more often than expected under independence in both samples.", BODY_PT)
+    rules = [("Rule", "Lift, discovery", "Lift, holdout", "Discovery leverage (pp)", "Holdout leverage (pp)")]
     for row in r.holdout.itertuples():
-        rule = f"{label_itemset(row.antecedent)} → {label_itemset(row.consequent)}"
-        rules.append((f"R{row.rank}   {rule}", f"{100 * row.discovery_leverage:+.2f}", f"{100 * row.leverage:+.2f}"))
-    heights = [2.25] + [2.5 if len(row[0]) > 41 else 2.03 for row in rules[1:]]
-    slide.table(rules, 4, 55.0, [20.35, 6.7, 6.6], heights)
-    slide.text("Rule results", (4, 69.3, 33.5, 4.0),
-               f"Both miners matched direct counts ({int(r.main_grid.itemsets)} sets, {int(r.main_grid.rules)} rules). "
-               f"{int(r.holdout.passes_thresholds.sum())} of {len(r.holdout)} selected rules passed both thresholds in the holdout.", 31)
-    slide.text("Timing", (4, 74.0, 33.7, 3.1),
-               f"Median time over {int(bench.repetitions.iloc[0])} runs on {n['discovery']:,} adults: "
-               f"Apriori {bench.loc['Apriori','median_ms']:.2f} ms, FP-Growth {bench.loc['FP-Growth','median_ms']:.2f} ms.", 27, MUTED)
+        rules.append((f"R{row.rank}   {label_itemset(row.antecedent)} → {label_itemset(row.consequent)}",
+                      f"{row.discovery_lift:.3f}", f"{row.lift:.3f}",
+                      f"{100*row.discovery_leverage:+.2f}", f"{100*row.leverage:+.2f}"))
+    slide.table("Replicated rules", rules, 28.45, 50.25, [22.1, 6.4, 6.3, 7.6, 7.3], [2.0]+[1.55]*len(r.holdout), LABEL_PT)
 
-    slide.panel("Health in the holdout", 40.7, 41.0, 36.8, 36.8)
-    slide.text("Health gap", (42.2, 45.75, 33.8, 3.5),
-               f"{health.difference_pp:.1f} percentage points", 57, NAVY, True)
-    slide.text("Health comparison", (42.2, 49.55, 33.8, 4.6),
-               f"For R1, {health.present_proportion:.1%} with both findings "
-               f"({int(health.present_fair_or_poor_n)}/{int(health.present_n)}) rated their health fair or poor, versus "
-               f"{health.absent_proportion:.1%} of other adults "
-               f"({int(health.absent_fair_or_poor_n)}/{int(health.absent_n)}).", 31)
-    slide.text("Chart title", (42.2, 55.05, 33.8, 1.8),
-               f"Fair or poor self-rated health  ·  n = {n['validation_valid_health']:,}", 29, NAVY, True)
-    slide.copy("Chart 60", "Health by rule and pattern membership", (41.75, 57.2, 34.6, 13.7))
-    slide.text("Adjusted comparison", (42.2, 71.3, 33.8, 5.3),
-               f"For R1, the age- and sex-adjusted odds ratio was {health['or']:.2f} "
-               f"(95% CI {health.or_ci_low:.2f}–{health.or_ci_high:.2f}). The interval accounts for survey clustering.", 31)
+    strata = r.table("heldout_rule_strata")
+    pair = strata.loc[strata.itemset.eq("elevated_bp + elevated_hba1c")]
+    if pair.empty:
+        pair = strata.loc[strata["rank"].eq(strata["rank"].min())]
+    rule = pair.iloc[0]
+    slide.text("Age and sex heading", (28.45, 61.1, 49.7, 1.7),
+               "Co-occurrence by age and sex", HEADING_PT, PURPLE, True)
+    older = pair.loc[pair.age_group.eq("60+")].set_index("sex_code")
+    shares = older.joint_n / older.n
+    findings = label_itemset(rule.itemset).replace(" + ", " and ").replace("Elevated", "elevated").replace("BP", "blood pressure")
+    slide.text("Age and sex description", (28.45, 62.65, 49.7, 2.2),
+               f"Bars show the share of each group with {findings} (R{int(rule['rank'])}).\n"
+               f"The share was highest at age 60 and over ({shares.loc[1]:.0%} of men and {shares.loc[2]:.0%} of women).",
+               BODY_PT)
+    slide.rectangle("Age and sex header fill", (28.45, 64.91, 49.7, 1.51), "E8DDF0")
+    slide.text("Age groups", (28.82, 65.0, 6.0, 1.35), "Age (years)", LABEL_PT, bold=True)
+    columns = [(1, "Men", 35.0), (2, "Women", 57.0)]
+    ages = ["20-39", "40-59", "60+"]
+    for index, age in enumerate(ages):
+        y = 66.65 + 1.68*index
+        slide.rectangle(f"{age} row fill", (28.45, y-.15, 49.7, 1.60),
+                        "FAF8FC" if index % 2 else "F5EFF8")
+        slide.text(age, (28.82, y, 6.0, 1.4), age.replace("-", "–"), LABEL_PT)
+    for sex, label, x in columns:
+        slide.text(label, (x, 65.0, 19.5, 1.35), label, LABEL_PT, PURPLE, True)
+        for index, age in enumerate(ages):
+            group = pair.loc[pair.sex_code.eq(sex) & pair.age_group.eq(age)].iloc[0]
+            share = group.joint_n / group.n
+            y = 66.65 + 1.68*index
+            name = f"{label} aged {age}"
+            width = 22 * share  # Same zero baseline and scale for all six groups.
+            if width > 0:
+                slide.rectangle(name, (x, y+.24, width, .76), PURPLE)
+            slide.text(name + " prevalence", (x+width+.4, y, 10.8, 1.5),
+                       f"{share:.1%}  ({int(group.joint_n)}/{int(group.n)})", LABEL_PT)
 
-    slide.panel("Interpretation and limitations", 2.5, 79.2, 75, 13.0)
-    slide.text("Weighted prevalence", (4, 84.2, 33.7, 6.7),
-               f"Using survey weights, {weighted.proportion:.1%} of adults with complete measures had the leading pair "
-               f"(95% CI {weighted.ci_low:.1%}–{weighted.ci_high:.1%}). A follow-up study could test whether "
-               "adults with both findings experience later declines in self-rated health.", 30)
-    slide.text("Limitations", (42.2, 84.2, 33.6, 6.7),
-               "One survey cycle cannot establish which finding came first. Missing measurements may affect "
-               "prevalence. Another cycle could test whether these patterns also occur in a different sample.", 30)
-    slide.text("Source heading", (3.1, 93.5, 74, 1.7), "Data and references", 31, GOLD, True)
-    slide.text("Sources", (3.1, 95.65, 74, 3.5),
-               "CDC / NCHS, National Health and Nutrition Examination Survey 2017–2018.\n"
-               "Agrawal & Srikant, Fast Algorithms for Mining Association Rules (1994).   Han, Pei & Yin, Mining Frequent Patterns without Candidate Generation (2000).",
-               24, WHITE)
+    slide.text("Health heading", (28.45, 72.6, 49.4, 1.9),
+               "Do adults with these patterns more often report fair or poor health?", HEADING_PT, PURPLE, True)
+    slide.text("Health comparison", (28.45, 74.55, 49.6, 2.55),
+               "Bars show the percentage rating their health as fair or poor. For each pattern, dark bars show adults "
+               "with every abnormality and light bars show those without the full pattern.", BODY_PT)
+    slide.copy("Chart 48", "Percentage rating health fair or poor by pattern", (28.45, 77.25, 49.65, 10.65))
+    gaps = r.health.difference_pp
+    slide.text("Health result", (28.45, 88.2, 49.65, 2.75),
+               f"Among {n['validation_valid_health']:,} holdout respondents, fair or poor health was "
+               f"{gaps.min():.1f}–{gaps.max():.1f} percentage points more common in adults with the full pattern.", BODY_PT)
+    slide.text("References", (16.4, 91.9, 61.8, 5.1),
+               "CDC / NCHS. National Health and Nutrition Examination Survey, 2017–2018.\n"
+               "Agrawal & Srikant. Fast Algorithms for Mining Association Rules (1994).\n"
+               "Han, Pei & Yin. Mining Frequent Patterns without Candidate Generation (2000).", 26)
 
 
 def draw_poster(results, path, authors=AUTHOR_LINE):
@@ -263,6 +328,12 @@ def draw_poster(results, path, authors=AUTHOR_LINE):
             updates = {"ppt/slides/slide1.xml": xml_bytes(slide.root), "ppt/charts/chart1.xml": chart,
                        "docProps/core.xml": props.toxml(encoding="utf-8"), "_rels/.rels": rels.toxml(encoding="utf-8"),
                        "ppt/embeddings/Microsoft_Excel_Sheet1.xlsx": workbook}
+            slide_rels_path = "ppt/slides/_rels/slide1.xml.rels"
+            slide_rels = ET.fromstring(source.read(slide_rels_path))
+            ET.SubElement(slide_rels, slide_rels[0].tag, Id="rIdHeatmap",
+                          Type=NS["r"] + "/image", Target="../media/cooccurrence.png")
+            updates[slide_rels_path] = xml_bytes(slide_rels)
+            target.write(results.figure("cooccurrence_heatmap"), "ppt/media/cooccurrence.png")
             for item in source.infolist():
                 if item.filename != "docProps/thumbnail.jpeg":
                     target.writestr(item, updates[item.filename] if item.filename in updates else source.read(item))
