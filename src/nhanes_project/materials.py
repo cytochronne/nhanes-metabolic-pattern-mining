@@ -8,7 +8,7 @@ from xml.sax.saxutils import escape
 from matplotlib import get_data_path
 import pandas as pd
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A1, A4, landscape
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
@@ -18,6 +18,7 @@ from reportlab.platypus import Paragraph, Table, TableStyle
 
 from .figures import label_itemset
 from .mining import decode_itemset, read_locked_candidates
+from .poster import AUTHOR_LINE, draw_poster
 
 
 INK = colors.HexColor("#102F3F")
@@ -26,7 +27,6 @@ SECONDARY = colors.HexColor("#3A5362")
 PALE = colors.HexColor("#E7F2F1")
 LINE = colors.HexColor("#CDDDE0")
 LIGHT = colors.HexColor("#F2F6F7")
-AUTHOR_LINE = "Yanzhe Xie (50013227)   ·   Ye Guo (50013485)   ·   Che Feng (50013502)"
 TITLE = "Mining Co-Occurring Metabolic Abnormalities in NHANES"
 REPORT_PAGES = 9
 
@@ -134,9 +134,11 @@ class Results:
         self.wide = self.table("complete_case_sensitivity")
         replication = self.table("rule_replication")
         identity = ["rank", "itemset", "antecedent", "consequent"]
-        discovered = replication.query("split == 'discovery'")[identity + ["lift"]]
+        discovered = replication.query("split == 'discovery'")[identity + ["lift", "leverage"]].rename(
+            columns={"lift": "discovery_lift", "leverage": "discovery_leverage"},
+        )
         self.holdout = replication.query("split == 'validation'").merge(
-            discovered.rename(columns={"lift": "discovery_lift"}), on=identity, validate="one_to_one",
+            discovered, on=identity, validate="one_to_one",
         ).merge(self.table("heldout_stratified_rules")[identity + [
             "observed_to_expected", "stratified_expected_joint_n",
         ]], on=identity, validate="one_to_one").sort_values("rank")
@@ -221,107 +223,6 @@ def stratification_summary(results):
     return (f"Among two-item rules, {rule_label(contrast)} showed the largest decrease. Its lift was "
             f"{contrast.lift:.3f} overall. The observed pair count was {contrast.observed_to_expected:.3f}× "
             "the count expected within age and sex groups.")
-
-
-def draw_poster(results, path):
-    page_width, page_height = landscape(A1)
-    pdf = pdf_canvas(path, (page_width, page_height), TITLE)
-    margin, gap = 66, 54
-    width = page_width - 2 * margin
-    col = (width - 2 * gap) / 3
-    pdf.setFillColor(INK)
-    pdf.rect(0, page_height - 276, page_width, 276, fill=1, stroke=0)
-    top = Region(pdf, margin, page_height - 43, width, page_height - 268)
-    top.text("AIAA 3111   /   DATA MINING COURSE PROJECT", 20, 12,
-             color=colors.HexColor("#9DD6D1"), font="ProjectSans-Bold")
-    top.text("Which metabolic abnormalities co-occur?", 64, 4, color=colors.white,
-             font="ProjectSans-Bold")
-    top.text("Association rules and self-rated health in NHANES 2017–2018", 34, 12, color=colors.white)
-    top.text(AUTHOR_LINE, 21, 0, color=colors.HexColor("#C7E0E3"))
-
-    n, focus = results.n, results.focus
-    boxes = [
-        (count(n["adult_mec_complete_items"]), "Adults with complete measures"),
-        (percent(results.candidates.iloc[0]["support"]), "Discovery support for central obesity + elevated HbA1c"),
-        (f'{focus["or"]:.2f}×', "Adjusted odds of fair/poor health for that pair"),
-    ]
-    for i, (big, label) in enumerate(boxes):
-        x = margin + i * (col + gap)
-        pdf.setFillColor(PALE)
-        pdf.roundRect(x, page_height - 424, col, 113, 13, stroke=0, fill=1)
-        block = Region(pdf, x + 21, page_height - 320, col - 42, page_height - 418)
-        block.text(big, 42, 0, color=TEAL, font="ProjectSans-Bold")
-        block.text(label, 20, 0)
-
-    left, center, right = [
-        Region(pdf, margin + i * (col + gap), page_height - 460, col, 95, scale=1.85)
-        for i in range(3)
-    ]
-    left.heading("Question and cohort")
-    left.text("Which abnormalities co-occur, and do the same combinations mark a higher proportion "
-              "of fair or poor self-rated health in held-out participants?")
-    left.table([
-        ("Cohort step", "Participants"),
-        ("Demographics after 7-file merge", count(n["merged_demographics"])),
-        ("Adults aged 20+ with MEC exam", count(n["adult_mec"])),
-        ("All five measurements observed", count(n["adult_mec_complete_items"])),
-        ("Discovery / held-out split", f'{count(n["discovery"])} / {count(n["validation"])}'),
-    ], [0.71, 0.29])
-    left.note("Five indicators cover waist circumference, blood pressure, HbA1c, HDL and total cholesterol. "
-              "Transactions with zero abnormalities stay in the support denominator.")
-    left.figure(results.figure("cooccurrence_heatmap"), width=col * 0.84)
-    left.heading("Algorithm comparison")
-    left.table(benchmark_rows(results), [0.28, 0.36, 0.36])
-    left.note("Median elapsed time (IQR), ten paired repetitions following warm-up. Both miners matched direct "
-              "counts at 2%, 5% and 10% support. Times apply to these implementations and five inputs.")
-
-    center.heading("Which rules replicated?")
-    center.text(f'Discovery yielded {int(results.main_grid["itemsets"])} frequent itemsets and '
-                f'{int(results.main_grid["rules"])} rules. We ranked combinations by leverage and joint count. '
-                + replication_summary(results))
-    center.table([("Rule in discovery rank order", "Discovery lift", "Holdout lift")] + [
-        (f"{row.rank}. {rule_label(row)}", f"{row.discovery_lift:.3f}", f"{row.lift:.3f}")
-        for row in results.holdout.itertuples(index=False)
-    ], [0.65, 0.18, 0.17])
-    center.note("Lift compares observed co-occurrence with the frequency expected under independence. "
-                "Values above 1 indicate excess co-occurrence.")
-    center.heading("How much does age and sex composition matter?")
-    center.text(stratification_summary(results))
-    center.heading("What does a second condition add?")
-    center.table([("Rule", "Single-condition baseline", "Confidence gain¹", "Support change¹")] + [
-        (str(row.rank), label_itemset(row.baseline_antecedent), f"{row.confidence_gain_pp:+.2f}",
-         f"{row.support_change_pp:+.2f}") for row in results.gains.itertuples(index=False)
-    ], [0.11, 0.40, 0.25, 0.24])
-    center.note("¹ Holdout differences in percentage points. Discovery confidence determined which single "
-                "condition to keep as the baseline. Both longer rules gained confidence and covered fewer adults.")
-    center.heading("Discovery stability")
-    center.text(f'{int(results.stability.reselection_rate.eq(1).sum())} combinations appeared in every one '
-                f'of {int(results.stability.repetitions.iloc[0])} discovery subsamples. Requiring only the '
-                f'measurements in each combination shifted prevalence by at most '
-                f'{results.wide.difference_pp.abs().max():.2f} percentage points.')
-
-    right.heading("Health in the held-out sample")
-    right.text(f'Among {count(n["validation_valid_health"])} adults with valid health responses, '
-               f'{percent(focus["present_proportion"])} of adults with the leading pair reported fair or poor '
-               f'health, compared with {percent(focus["absent_proportion"])} of the remaining adults.')
-    right.figure(results.figure("health_distribution"), width=col * 0.91)
-    right.table([("Rank", "Fair/poor difference", "Adjusted OR (95% CI)")] + [
-        (int(row["rank"]), f'+{row["difference_pp"]:.1f} percentage points', odds(row))
-        for _, row in results.health.iterrows()
-    ], [0.10, 0.46, 0.44], size=8.7)
-    right.note("Exploratory logistic models adjust for age and sex and cluster by the 30 masked PSUs.")
-    right.heading("Survey-weighted estimate")
-    weighted = results.weighted.query("rank == 1 and metric == 'itemset_prevalence'").iloc[0]
-    right.text(f'The leading pair had {percent(weighted.proportion)} weighted prevalence '
-               f'({percent(weighted.ci_low)} to {percent(weighted.ci_high)}, 95% CI) among adult complete cases. '
-               "Complete-case selection and the cross-sectional design limit interpretation.")
-
-    pdf.setStrokeColor(LINE)
-    pdf.line(margin, 70, page_width - margin, 70)
-    footer = Region(pdf, margin, 57, width, 16, scale=2)
-    footer.note("Sources: CDC/NCHS NHANES 2017-2018 and survey tutorials. Mining: Agrawal and Srikant (1994), "
-                "Han, Pei and Yin (2000). Technical details and AIGC disclosure are in the project report.", space=0)
-    pdf.save()
 
 
 def report_page(pdf, section, title):

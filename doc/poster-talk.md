@@ -8,7 +8,7 @@ We asked which metabolic abnormalities occur together in NHANES and whether thos
 
 ### Discovery and algorithms · 0:45–1:45
 
-The heatmap shows how common each pair was. Central obesity with elevated HbA1c was the most common pair at 32.5%, or 1,026 discovery participants. The obesity-to-HbA1c rule had 53.7% confidence and 1.19 lift. Among discovery participants with central obesity, 53.7% had elevated HbA1c. The pair occurred 19% more often than expected if the two indicators were independent.
+The first row of the rules table shows the leading pair. Central obesity with elevated HbA1c was the most common pair at 32.5%, or 1,026 discovery participants. The obesity-to-HbA1c rule had 53.7% confidence and 1.19 lift. Among discovery participants with central obesity, 53.7% had elevated HbA1c. The pair occurred 19% more often than expected if the two indicators were independent.
 
 We implemented Apriori and FP-Growth, and both matched direct counts at 2%, 5% and 10% minimum support. At our main thresholds of 5% support and 50% confidence, there were 18 frequent itemsets and 17 rules. FP-Growth ran faster in the three paired timing settings. This comparison applies to our implementations, sample sizes and five binary items.
 
